@@ -43,13 +43,17 @@ void msg(int &i)
         std::cout << "You reached 2048!" << '\n';  
 }
 
-void mergeUp() {  
+vector<int> v;
+void mergeUp(bool& sliped) {  
     std::vector<int*> column;   
-    for (int col = 0; col < dat.size; ++col) {    
-        column.clear(); // 清除上一列的指针  
+    for (int col = 0; col < dat.size; ++col) {   
+        v.clear();
+        for (int i = 0; i < dat.size; ++i)  v.push_back(grid[i][col]);
+
+        column.clear(); // 清除上一列的指针
         for (int row = 0; row < dat.size; ++row) {    
             if (grid[row][col] != 0)  
-                column.push_back(&grid[row][col]);    
+                column.push_back(&grid[row][col]);
         }  
     
         // 如果列中没有数字，则跳过  
@@ -57,9 +61,11 @@ void mergeUp() {
 
         int idx = 0;    
         while (idx < column.size() - 1) {    
-            if (*column[idx] == *column[idx + 1]) {    
+            if (*column[idx] == *column[idx + 1]) {   
+                                sliped = true; 
+ 
                 *column[idx] *= 2; // 合并相同的数字  
-                dat.score += *column[idx];    
+                dat.score += *column[idx];
                 // 注意：删除下一个元素后，不需要再次增加idx，因为下一个元素会移动到当前位置  
                 column.erase(column.begin() + idx + 1); // 移除已合并的数字    
 
@@ -69,33 +75,39 @@ void mergeUp() {
         }  
     
         // 将合并后的数字放回grid中  
-        idx = 0;  
+        idx = 0; 
         for (int row = 0; row < dat.size; ++row) {    
             if (idx < column.size()) {  
                 grid[row][col] = *column[idx++]; // 只在column中有值时赋值，否则为0  
             } else {  
                 grid[row][col] = 0; // 如果column中的值都用完了，则剩余的行都为0  
             }  
-        }  
+        } 
+        for (int i = 0; i < dat.size; ++i)  if (grid[i][col] != v[i])   sliped = true;
     }
 
 }  
 
-void mergeLeft() {  
+void mergeLeft(bool& sliped) {  
     std::vector<int*> rows; 
     for (int row = 0; row < dat.size; ++row) {  
+        v.clear();
+        for (int i = 0; i < dat.size; ++i)  v.push_back(grid[row][i]);
+
         rows.clear();
         for (int col = 0; col < dat.size; ++col) {  
             if (grid[row][col] != 0)
                 rows.push_back(&grid[row][col]);  
         }
 
-    // 如果列中没有数字，则跳过  
-    if (rows.empty()) continue;  
+        // 如果列中没有数字，则跳过  
+        if (rows.empty()) continue;  
         // 合并temp中的数字  
         int idx = 0;  
         while (idx < rows.size() - 1) {  
             if (*rows[idx] == *rows[idx + 1]) {  
+                                sliped = true; 
+
                 *rows[idx] *= 2; // 合并相同的数字  
                 dat.score += *rows[idx];  
                 rows.erase(rows.begin() + idx + 1); // 移除已合并的数字  
@@ -108,22 +120,29 @@ void mergeLeft() {
         idx = 0;
         // 将合并后的数字放回newGrid中  
         for (int col = 0; col < dat.size; ++col) {  
-            if (idx < rows.size())    grid[row][col] = *rows[idx++];
+            if (idx < rows.size())    
+            {
+                grid[row][col] = *rows[idx++];
+            }
             else grid[row][col] = 0;
         }  
+        for (int i = 0; i < dat.size; ++i)  if (grid[row][i] != v[i])   sliped = true;
     }
 }  
 
-void mergeDown() {
+void mergeDown(bool& sliped) {
     vector<int*> column;
-    for (int col = 0; col < dat.size; ++col) {  
+    for (int col = 0; col < dat.size; ++col) {
+        v.clear();
+        for (int i = 0; i < dat.size; ++i)  v.push_back(grid[i][col]);
+
         column.clear();
         for (int row = dat.size-1; row >= 0; --row) {  
             if (grid[row][col] != 0)
                 column.push_back(&grid[row][col]);  
         }
 
-    if (column.empty()) continue;  
+        if (column.empty()) continue;  
 
         // 合并temp中的数字  
         int idx = 0;  
@@ -140,76 +159,88 @@ void mergeDown() {
         }
 
         idx = 0;
+
         // 将合并后的数字放回newGrid中  
         for (int row = dat.size-1; row >= 0; --row) {  
-            if (idx < column.size())    grid[row][col] = *column[idx++];              
+            if (idx < column.size())    
+            {
+                grid[row][col] = *column[idx++];              
+            }
             else grid[row][col] = 0;
         }  
+        for (int i = 0; i < dat.size; ++i)  if (grid[i][col] != v[i])   sliped = true;
     }
 }  
 
-void mergeRight() {  
+void mergeRight(bool& sliped) {  
     vector<int*> rows;
     for (int row = 0; row < dat.size; ++row) {  
+        v.clear();
+        for (int i = 0; i < dat.size; ++i)  v.push_back(grid[row][i]);
+
         rows.clear();
         for (int col = dat.size-1; col >=0; --col) {  
             if (grid[row][col] != 0)
                 rows.push_back(&grid[row][col]);  
         }
 
-    if (rows.empty()) continue;  
+        if (rows.empty()) continue;  
         // 合并temp中的数字  
         int idx = 0;  
         while (idx < rows.size() - 1) {  
-            if (*rows[idx] == *rows[idx + 1]) {  
-                *rows[idx] *= 2; // 合并相同的数字  
+            if (*rows[idx] == *rows[idx + 1]) { 
+                *rows[idx] *= 2; // 合并相同的数字
                 dat.score += *rows[idx];  
-
                 rows.erase(rows.begin() + idx + 1); // 移除已合并的数字  
-  
+
                 // 如果合并后的数字等于2048，输出消息并结束循环  
                 msg(*rows[idx]);
-
+                
             }  else ++idx;  
         }  
 
         idx = 0;
         // 将合并后的数字放回newGrid中  
         for (int col = dat.size-1; col >= 0; --col) {  
-            if (idx < rows.size())    grid[row][col] = *rows[idx++]; // 只在column中有值时赋值，否则为0  
+            if (idx < rows.size())    
+            {
+                grid[row][col] = *rows[idx++]; // 只在column中有值时赋值，否则为0  
+            }
             else grid[row][col] = 0;
-        }  
+        }
+        for (int i = 0; i < dat.size; ++i)  if (grid[row][i] != v[i])   sliped = true;
     }
 }  
 
 
 bool check(char direction) {
+    bool sliped = false;
     switch (direction)
     {
 		case 119: // 'w' key
 		case 107: // 'k' key
 		case 65:  // up arrow
-            mergeUp();
+            mergeUp(sliped);
             break;
 		case 97:  // 'a' key
 		case 104: // 'h' key
 		case 68:  // left arrow
-            mergeLeft();
-                    break;
+            mergeLeft(sliped);
+            break;
 		case 115: // 's' key
 		case 106: // 'j' key
 		case 66:  // down arrow
-                mergeDown();
-                    break;
+            mergeDown(sliped);
+            break;
 		case 100: // 'd' key
 		case 108: // 'l' key
 		case 67:  // right arrow
-                mergeRight();
-                    break;
+            mergeRight(sliped);
+            break;
         default:
             return false;
     }
-    return true;
+    return sliped;
 }  
   
 void refresh() {
