@@ -4,28 +4,35 @@
 #include <ctime>  
 #include <iomanip>
 
-const int SIZE = 4;  
-const int MAX_VALUE = 2048;  
+struct Data {
+    int score;
+    int size;
+    int max_value;
+};
   
+Data dat = {0, 4, 2048};
+
 using namespace std;
 
 vector<vector<int>> grid(4, vector<int>(4));
 
-bool addRandomTile() {  
+bool addRandom() {  
     std::srand(static_cast<unsigned int>(std::time(nullptr)));    
-    while (true) {  
-        int row = std::rand() % SIZE;  
-        int col = std::rand() % SIZE;  
-        if (grid[row][col] == 0) {  
-            grid[row][col] = 2;
-            return true;
-        }  
-    }  
+    vector<pair<int, int>>  avaliable;
+    for (int i = 0; i < dat.size; ++i)
+    {
+        for (int j = 0; j < dat.size; ++j)
+            if (grid[i][j] == 0)    avaliable.push_back({i, j});
+    }
+    if (avaliable.size() == 0)  return false;
+    int rand = std::rand() % avaliable.size();  
+    grid[avaliable[rand].first][avaliable[rand].second] = 2;
+    return true;
 }  
 
 void initialize() {  
-    addRandomTile();  
-    addRandomTile();  
+    addRandom();  
+    addRandom();  
 }
 
 void msg(int &i)
@@ -34,13 +41,11 @@ void msg(int &i)
         std::cout << "You reached 2048!" << '\n';  
 }
 
-int score = 0;
-
 void mergeUp() {  
     std::vector<int*> column;   
-    for (int col = 0; col < SIZE; ++col) {    
+    for (int col = 0; col < dat.size; ++col) {    
         column.clear(); // 清除上一列的指针  
-        for (int row = 0; row < SIZE; ++row) {    
+        for (int row = 0; row < dat.size; ++row) {    
             if (grid[row][col] != 0)  
                 column.push_back(&grid[row][col]);    
         }  
@@ -52,7 +57,7 @@ void mergeUp() {
         while (idx < column.size() - 1) {    
             if (*column[idx] == *column[idx + 1]) {    
                 *column[idx] *= 2; // 合并相同的数字  
-                score += *column[idx];    
+                dat.score += *column[idx];    
                 // 注意：删除下一个元素后，不需要再次增加idx，因为下一个元素会移动到当前位置  
                 column.erase(column.begin() + idx + 1); // 移除已合并的数字    
 
@@ -63,7 +68,7 @@ void mergeUp() {
     
         // 将合并后的数字放回grid中  
         idx = 0;  
-        for (int row = 0; row < SIZE; ++row) {    
+        for (int row = 0; row < dat.size; ++row) {    
             if (idx < column.size()) {  
                 grid[row][col] = *column[idx++]; // 只在column中有值时赋值，否则为0  
             } else {  
@@ -76,9 +81,9 @@ void mergeUp() {
 
 void mergeLeft() {  
     std::vector<int*> rows; 
-    for (int row = 0; row < SIZE; ++row) {  
+    for (int row = 0; row < dat.size; ++row) {  
         rows.clear();
-        for (int col = 0; col < SIZE; ++col) {  
+        for (int col = 0; col < dat.size; ++col) {  
             if (grid[row][col] != 0)
                 rows.push_back(&grid[row][col]);  
         }
@@ -90,8 +95,7 @@ void mergeLeft() {
         while (idx < rows.size() - 1) {  
             if (*rows[idx] == *rows[idx + 1]) {  
                 *rows[idx] *= 2; // 合并相同的数字  
-                score += *rows[idx];  
-
+                dat.score += *rows[idx];  
                 rows.erase(rows.begin() + idx + 1); // 移除已合并的数字  
   
                 // 如果合并后的数字等于2048，输出消息并结束循环  
@@ -101,7 +105,7 @@ void mergeLeft() {
 
         idx = 0;
         // 将合并后的数字放回newGrid中  
-        for (int col = 0; col < SIZE; ++col) {  
+        for (int col = 0; col < dat.size; ++col) {  
             if (idx < rows.size())    grid[row][col] = *rows[idx++];
             else grid[row][col] = 0;
         }  
@@ -110,9 +114,9 @@ void mergeLeft() {
 
 void mergeDown() {
     vector<int*> column;
-    for (int col = 0; col < SIZE; ++col) {  
+    for (int col = 0; col < dat.size; ++col) {  
         column.clear();
-        for (int row = SIZE-1; row >= 0; --row) {  
+        for (int row = dat.size-1; row >= 0; --row) {  
             if (grid[row][col] != 0)
                 column.push_back(&grid[row][col]);  
         }
@@ -124,8 +128,7 @@ void mergeDown() {
         while (idx < column.size() - 1) {  
             if (*column[idx] == *column[idx + 1]) {  
                 *column[idx] *= 2; // 合并相同的数字  
-                                score += *column[idx];  
-
+                dat.score += *column[idx];  
                 column.erase(column.begin() + idx + 1); // 移除已合并的数字  
   
                 // 如果合并后的数字等于2048，输出消息并结束循环  
@@ -136,7 +139,7 @@ void mergeDown() {
 
         idx = 0;
         // 将合并后的数字放回newGrid中  
-        for (int row = SIZE-1; row >= 0; --row) {  
+        for (int row = dat.size-1; row >= 0; --row) {  
             if (idx < column.size())    grid[row][col] = *column[idx++];              
             else grid[row][col] = 0;
         }  
@@ -145,9 +148,9 @@ void mergeDown() {
 
 void mergeRight() {  
     vector<int*> rows;
-    for (int row = 0; row < SIZE; ++row) {  
+    for (int row = 0; row < dat.size; ++row) {  
         rows.clear();
-        for (int col = SIZE-1; col >=0; --col) {  
+        for (int col = dat.size-1; col >=0; --col) {  
             if (grid[row][col] != 0)
                 rows.push_back(&grid[row][col]);  
         }
@@ -158,7 +161,7 @@ void mergeRight() {
         while (idx < rows.size() - 1) {  
             if (*rows[idx] == *rows[idx + 1]) {  
                 *rows[idx] *= 2; // 合并相同的数字  
-                                score += *rows[idx];  
+                dat.score += *rows[idx];  
 
                 rows.erase(rows.begin() + idx + 1); // 移除已合并的数字  
   
@@ -170,7 +173,7 @@ void mergeRight() {
 
         idx = 0;
         // 将合并后的数字放回newGrid中  
-        for (int col = SIZE-1; col >= 0; --col) {  
+        for (int col = dat.size-1; col >= 0; --col) {  
             if (idx < rows.size())    grid[row][col] = *rows[idx++]; // 只在column中有值时赋值，否则为0  
             else grid[row][col] = 0;
         }  
@@ -210,20 +213,22 @@ bool check(char direction) {
 void refresh() {
     cout << '\n'; 
     printf("\033[H"); // move cursor to 0,0
-    for (int row = 0; row < SIZE; ++row) {  
-        for (int col = 0; col < SIZE; ++col) {  
+    for (int row = 0; row < dat.size; ++row) {  
+        for (int col = 0; col < dat.size; ++col) {  
             std::cout << std::setw(3) << grid[row][col] << " ";  
         }  
         std::cout << std::endl;  
     }  
-    std::cout << "\nscore is " << score << '\n';
+    std::cout << "\nscore is " << dat.score << '\n';
 }  
 
 #include <termios.h>  
 #include <unistd.h>
+#include <fstream>
+#include <algorithm>
 
 int main() {  
-    initialize();  
+    initialize();
     std::cout << "Enter move (w/a/s/d or q/enter to quit): \n";  
 
 	// make cursor invisible, erase entire screen
@@ -234,7 +239,31 @@ int main() {
     newt.c_lflag &= (~ICANON & ~ECHO); // 关闭规范模式和回显, disable canonical mode (buffered i/o) and local echo
     tcsetattr(STDIN_FILENO, TCSANOW, &newt); // 应用新的终端设置  
 
+
+    std::vector<Data> dats;
+    Data tmp;
+    std::fstream file("scores.dat"); // 使用二进制模式  
+    if (!file.is_open()) {  
+        std::cerr << "无法打开文件以进行读取" << std::endl;  
+        return 1;  
+    }
+    while (file.read(reinterpret_cast<char*>(&tmp), sizeof(tmp)))  
+    {
+        dats.push_back(tmp);
+    }
+    sort(dats.begin(), dats.end(), [](Data &a, Data &b){
+        if (a.score > b.score)  return true;
+        else if (a.size > b.size)   return true;
+        else if (a.max_value > b.max_value) return true;
+    });  
+    file.close();
+
     refresh();
+    for (Data dat : dats)
+    {
+        cout << setw(8) << dat.score << setw(8) << dat.size << setw(8) << dat.max_value << '\n';
+    }
+
     char direction;  
     while ((direction = getchar()) != ('\n')) {  
             if (direction == 'q') {  
@@ -244,12 +273,25 @@ int main() {
             if (check(direction))
             {  
                 refresh(); 
-                addRandomTile();
-                refresh();
+                if (addRandom())
+                    refresh();
+                else 
+                {
+                    continue;
+                };
             } 
         // TODO: 检查游戏是否结束（无法再合并）  
     }  
-  	
+    cout << "game over\n";
+
+    file.open("scores.dat", std::ios::app);
+    if (!file.is_open()) {  
+        std::cerr << "无法打开文件！" << std::endl;  
+        return 1;  
+    }
+    file.write(reinterpret_cast<char*>(&dat), sizeof(dat));
+    file.close();
+
 
     tcsetattr(STDIN_FILENO, TCSANOW, &oldt); // 恢复旧的终端设置  
     // make cursor visible, reset all modes
