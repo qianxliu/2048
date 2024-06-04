@@ -4,15 +4,17 @@
 #include <ctime>  
 #include <iomanip>
 
+
+#include <ctime>
+#include <string>
+using namespace std;
 struct Data {
     int score;
     int size;
-    int max_value;
+    long time;
 };
   
-Data dat = {0, 4, 2048};
-
-using namespace std;
+Data dat = {0, 4, 0};
 
 vector<vector<int>> grid(4, vector<int>(4));
 
@@ -242,33 +244,26 @@ int main() {
 
     std::vector<Data> dats;
     Data tmp;
-    std::fstream file("scores.dat"); // 使用二进制模式  
-    if (!file.is_open()) {  
+    std::ifstream input("scores.dat"); // 使用二进制模式  
+    if (!input.is_open()) {  
         std::cerr << "无法打开文件以进行读取" << std::endl;  
         return 1;  
     }
-    while (file.read(reinterpret_cast<char*>(&tmp), sizeof(tmp)))  
+    while (input.read(reinterpret_cast<char*>(&tmp), sizeof(tmp)))  
     {
         dats.push_back(tmp);
     }
-    sort(dats.begin(), dats.end(), [](Data &a, Data &b){
-        if (a.score > b.score)  return true;
-        else if (a.size > b.size)   return true;
-        else if (a.max_value > b.max_value) return true;
-    });  
-    file.close();
+    input.close();
 
     refresh();
     for (Data dat : dats)
     {
-        cout << setw(8) << dat.score << setw(8) << dat.size << setw(8) << dat.max_value << '\n';
+        time_t now = dat.time;
+        cout << dat.score << "\t" << dat.size << "\t" << asctime(localtime(&now));
     }
 
     char direction;  
-    while ((direction = getchar()) != ('\n')) {  
-            if (direction == 'q') {  
-                break;  
-            }
+    while ((direction = getchar()) != '\n' && direction != 'q') {  
             refresh();
             if (check(direction))
             {  
@@ -283,14 +278,26 @@ int main() {
         // TODO: 检查游戏是否结束（无法再合并）  
     }  
     cout << "game over\n";
+    dat.time = std::time(nullptr);
+    dats.push_back(dat);
+    sort(dats.begin(), dats.end(), [](Data &a, Data &b){
+        return a.score > b.score;   // can not if (a.score>b.score) return true;
+    });  
+    for (int i = dats.size()-1; i > 0; --i)
+    {
+        if (i > 9 || dats[i].score == dats[i-1].score)   dats.erase(dats.begin() + i);
+    }
 
-    file.open("scores.dat", std::ios::app);
-    if (!file.is_open()) {  
+    std::ofstream output("scores.dat", std::ios::out | std::ios::trunc); // 使用二进制模式  
+    if (!output.is_open()) {  
         std::cerr << "无法打开文件！" << std::endl;  
         return 1;  
     }
-    file.write(reinterpret_cast<char*>(&dat), sizeof(dat));
-    file.close();
+    for (Data dat : dats)
+    {
+        output.write(reinterpret_cast<char*>(&dat), sizeof(dat));
+    }
+    output.close();
 
 
     tcsetattr(STDIN_FILENO, TCSANOW, &oldt); // 恢复旧的终端设置  
