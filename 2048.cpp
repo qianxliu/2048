@@ -4,6 +4,9 @@
 #include <ctime>  
 #include <iomanip>
 
+#include <unistd.h>
+#include <fstream>
+#include <algorithm>
 
 #include <ctime>
 #include <string>
@@ -83,7 +86,10 @@ void mergeUp(bool& sliped) {
                 grid[row][col] = 0; // 如果column中的值都用完了，则剩余的行都为0  
             }  
         } 
-        for (int i = 0; i < dat.size; ++i)  if (grid[i][col] != v[i])   sliped = true;
+        for (int i = 0; i < dat.size; ++i)  if (grid[i][col] != v[i])   {
+            sliped = true;
+            break;
+        }
     }
 
 }  
@@ -126,7 +132,7 @@ void mergeLeft(bool& sliped) {
             }
             else grid[row][col] = 0;
         }  
-        for (int i = 0; i < dat.size; ++i)  if (grid[row][i] != v[i])   sliped = true;
+        for (int i = 0; i < dat.size; ++i)  if (grid[row][i] != v[i])   {sliped = true; break;}
     }
 }  
 
@@ -168,7 +174,7 @@ void mergeDown(bool& sliped) {
             }
             else grid[row][col] = 0;
         }  
-        for (int i = 0; i < dat.size; ++i)  if (grid[i][col] != v[i])   sliped = true;
+        for (int i = 0; i < dat.size; ++i)  if (grid[i][col] != v[i])   {sliped = true; break;}
     }
 }  
 
@@ -208,7 +214,7 @@ void mergeRight(bool& sliped) {
             }
             else grid[row][col] = 0;
         }
-        for (int i = 0; i < dat.size; ++i)  if (grid[row][i] != v[i])   sliped = true;
+        for (int i = 0; i < dat.size; ++i)  if (grid[row][i] != v[i])   {sliped = true; break;}
     }
 }  
 
@@ -242,23 +248,79 @@ bool check(char direction) {
     }
     return sliped;
 }  
-  
-void refresh() {
-    cout << '\n'; 
-    printf("\033[H"); // move cursor to 0,0
-    for (int row = 0; row < dat.size; ++row) {  
-        for (int col = 0; col < dat.size; ++col) {  
-            std::cout << std::setw(3) << grid[row][col] << " ";  
-        }  
-        std::cout << std::endl;  
+
+// this function receives 2 pointers (indicated by *) so it can set their values
+void getColors(int value, uint8_t scheme, uint8_t *foreground, uint8_t *background)
+{
+    
+	uint8_t original[] = {8, 255, 1, 255, 2, 255, 3, 255, 4, 255, 5, 255, 6, 255, 7, 255, 9, 0, 10, 0, 11, 0, 12, 0, 13, 0, 14, 0, 255, 0, 255, 0};
+	uint8_t blackwhite[] = {232, 255, 234, 255, 236, 255, 238, 255, 240, 255, 242, 255, 244, 255, 246, 0, 248, 0, 249, 0, 250, 0, 251, 0, 252, 0, 253, 0, 254, 0, 255, 0};
+	uint8_t bluered[] = {235, 255, 63, 255, 57, 255, 93, 255, 129, 255, 165, 255, 201, 255, 200, 255, 199, 255, 198, 255, 197, 255, 196, 255, 196, 255, 196, 255, 196, 255, 196, 255};
+	uint8_t *schemes[] = {original, blackwhite, bluered};
+	// modify the 'pointed to' variables (using a * on the left hand of the assignment)
+    int temp = 1;
+    uint8_t exponent = 0;
+    while (temp < value) {  
+        temp <<= 1; // Left shift by 1  
+        exponent++;  
     }  
-    std::cout << "\nscore is " << dat.score << '\n';
+	*foreground = *(schemes[scheme] + (exponent*2+1) % sizeof(original));
+	*background = *(schemes[scheme] + (exponent*2) % sizeof(original));
+	// alternatively we could have returned a struct with two variables
+}
+
+void printColor(uint8_t &x, uint8_t &y, uint8_t &fg, uint8_t &bg)
+{
+	for (y = 0; y < dat.size; y++)
+	{
+		// send the addresses of the foreground and background variables,
+		// so that they can be modified by the getColors function
+		getColors(grid[x][y], 0, &fg, &bg);
+		printf("\033[38;5;%d;48;5;%dm", fg, bg); // set color
+		printf("       ");
+		printf("\033[m"); // reset all modes
+	}
+    printf("\n");
+}
+
+void refresh() {
+    printf("\033[H"); // move cursor to 0,0
+    printf("2048.cpp %17d pts\n", dat.score);
+
+	uint8_t x, y, fg, bg;    
+    for (x = 0; x < dat.size; x++)
+	{
+		printColor(x, y, fg, bg);
+		for (y = 0; y < dat.size; y++)
+		{
+			getColors(grid[x][y], 0, &fg, &bg);
+			printf("\033[38;5;%d;48;5;%dm", fg, bg); // set color
+			if (grid[x][y] != 0)
+			{
+                int number = grid[x][y];
+                int count = 0;
+                do
+                {
+                    number /= 10;
+                    count += 1;
+                } while (number);
+				uint8_t t = 7 - count;
+				printf("%*s%u%*s", t - t / 2, "", grid[x][y], t / 2, "");
+			}
+			else
+			{
+				printf("   ·   ");
+			}
+			printf("\033[m"); // reset all modes
+		}
+        printf("\n");
+		printColor(x, y, fg, bg);
+	}
+	printf("\n");
+	printf("\033[A"); // one line up
 }  
 
-#include <termios.h>  
-#include <unistd.h>
-#include <fstream>
-#include <algorithm>
+#include<termios.h>
 
 int main() {  
     initialize();
@@ -266,13 +328,13 @@ int main() {
 
 	// make cursor invisible, erase entire screen
     printf("\033[?25l\033[2J");
-    struct termios oldt, newt;  
-    tcgetattr(STDIN_FILENO, &oldt); // 保存旧的终端设置  
-    newt = oldt;  
-    newt.c_lflag &= (~ICANON & ~ECHO); // 关闭规范模式和回显, disable canonical mode (buffered i/o) and local echo
-    tcsetattr(STDIN_FILENO, TCSANOW, &newt); // 应用新的终端设置  
-
-
+        struct termios oldt, newt;  
+        {
+            tcgetattr(STDIN_FILENO, &oldt); // 保存旧的终端设置  
+            newt = oldt;  
+            newt.c_lflag &= (~ICANON & ~ECHO); // 关闭规范模式和回显, disable canonical mode (buffered i/o) and local echo
+            tcsetattr(STDIN_FILENO, TCSANOW, &newt); // 应用新的终端设置  
+        }
     std::vector<Data> dats;
     Data tmp;
     std::ifstream input("scores.dat"); // 使用二进制模式  
@@ -331,7 +393,7 @@ int main() {
     output.close();
 
 
-    tcsetattr(STDIN_FILENO, TCSANOW, &oldt); // 恢复旧的终端设置  
+        tcsetattr(STDIN_FILENO, TCSANOW, &oldt); // 恢复旧的终端设置  
     // make cursor visible, reset all modes
 	printf("\033[?25h\033[m");
 
