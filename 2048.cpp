@@ -281,6 +281,7 @@ void printColor(uint8_t &x, uint8_t &y, uint8_t &fg, uint8_t &bg)
 
 void refresh() {
     printf("\033[H"); // move cursor to 0,0
+    std::cout << "Enter move (w/a/s/d or q/enter to quit): \n";  
     printf("2048.cpp %17d points\n", dat.score);
 
 	uint8_t x, y, fg, bg;    
@@ -317,7 +318,8 @@ void refresh() {
 }  
 
 #ifdef _WIN32  
-    #include <windows.h>
+    #define byte WindowsByte // 或者其他不会与 std::byte 冲突的名字  
+    #include <windows.h> // x86_64-w64-mingw32-g++ ./2048.cpp -static on ubuntu and the terminal should support ANSI(Windows Terminal, ConEmu, Cygwin)
 #elif __linux__
     #include <termios.h>
     #include <unistd.h>
@@ -325,13 +327,13 @@ void refresh() {
 
 int main() {  
     initialize();
-    std::cout << "Enter move (w/a/s/d or q/enter to quit): \n";  
 
 	// make cursor invisible, erase entire screen
     printf("\033[?25l\033[2J");
 
     #ifdef _WIN32  
-        HANDLE hStdin = GetStdHandle(STD_INPUT_HANDLE), DWORD mode;
+        HANDLE hStdin = GetStdHandle(STD_INPUT_HANDLE);
+        DWORD mode;
         GetConsoleMode(hStdin, &mode);
         mode &= (~ENABLE_LINE_INPUT & ~ENABLE_ECHO_INPUT);  
         SetConsoleMode(hStdin, mode);
