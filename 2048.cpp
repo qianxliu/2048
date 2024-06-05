@@ -3,13 +3,11 @@
 #include <cstdlib>  
 #include <ctime>  
 #include <iomanip>
-
-#include <unistd.h>
 #include <fstream>
 #include <algorithm>
-
 #include <ctime>
 #include <string>
+
 using namespace std;
 struct Data {
     int score;
@@ -42,8 +40,7 @@ void initialize() {
 
 void msg(int &i)
 {
-    if (i == 2048)
-        std::cout << "You reached 2048!" << '\n';  
+    if (i == 2048)  std::cout << "You reached 2048!" << '\n';  
 }
 
 vector<int> v;
@@ -112,7 +109,7 @@ void mergeLeft(bool& sliped) {
         int idx = 0;  
         while (idx < rows.size() - 1) {  
             if (*rows[idx] == *rows[idx + 1]) {  
-                                sliped = true; 
+                sliped = true; 
 
                 *rows[idx] *= 2; // 合并相同的数字  
                 dat.score += *rows[idx];  
@@ -258,8 +255,7 @@ void getColors(int value, uint8_t scheme, uint8_t *foreground, uint8_t *backgrou
 	uint8_t bluered[] = {235, 255, 63, 255, 57, 255, 93, 255, 129, 255, 165, 255, 201, 255, 200, 255, 199, 255, 198, 255, 197, 255, 196, 255, 196, 255, 196, 255, 196, 255, 196, 255};
 	uint8_t *schemes[] = {original, blackwhite, bluered};
 	// modify the 'pointed to' variables (using a * on the left hand of the assignment)
-    int temp = 1;
-    uint8_t exponent = 0;
+    int temp = 1, exponent = 0;
     while (temp < value) {  
         temp <<= 1; // Left shift by 1  
         exponent++;  
@@ -285,7 +281,7 @@ void printColor(uint8_t &x, uint8_t &y, uint8_t &fg, uint8_t &bg)
 
 void refresh() {
     printf("\033[H"); // move cursor to 0,0
-    printf("2048.cpp %17d pts\n", dat.score);
+    printf("2048.cpp %17d points\n", dat.score);
 
 	uint8_t x, y, fg, bg;    
     for (x = 0; x < dat.size; x++)
@@ -320,7 +316,12 @@ void refresh() {
 	printf("\033[A"); // one line up
 }  
 
-#include<termios.h>
+#ifdef _WIN32  
+    #include <windows.h>
+#elif __linux__
+    #include <termios.h>
+    #include <unistd.h>
+#endif
 
 int main() {  
     initialize();
@@ -328,13 +329,20 @@ int main() {
 
 	// make cursor invisible, erase entire screen
     printf("\033[?25l\033[2J");
+
+    #ifdef _WIN32  
+        HANDLE hStdin = GetStdHandle(STD_INPUT_HANDLE), DWORD mode;
+        GetConsoleMode(hStdin, &mode);
+        mode &= (~ENABLE_LINE_INPUT & ~ENABLE_ECHO_INPUT);  
+        SetConsoleMode(hStdin, mode);
+    #elif __linux__
         struct termios oldt, newt;  
-        {
-            tcgetattr(STDIN_FILENO, &oldt); // 保存旧的终端设置  
-            newt = oldt;  
-            newt.c_lflag &= (~ICANON & ~ECHO); // 关闭规范模式和回显, disable canonical mode (buffered i/o) and local echo
-            tcsetattr(STDIN_FILENO, TCSANOW, &newt); // 应用新的终端设置  
-        }
+        tcgetattr(STDIN_FILENO, &oldt); // 保存旧的终端设置  
+        newt = oldt;  
+        newt.c_lflag &= (~ICANON & ~ECHO); // 关闭规范模式和回显, disable canonical mode (buffered i/o) and local echo
+        tcsetattr(STDIN_FILENO, TCSANOW, &newt); // 应用新的终端设置  
+    #endif
+
     std::vector<Data> dats;
     Data tmp;
     std::ifstream input("scores.dat"); // 使用二进制模式  
@@ -383,7 +391,7 @@ int main() {
 
     std::ofstream output("scores.dat", std::ios::out | std::ios::trunc); // 使用二进制模式  
     if (!output.is_open()) {  
-        std::cerr << "无法打开文件！" << std::endl;  
+        std::cerr << "can not open file!" << std::endl;  
         return 1;  
     }
     for (Data dat : dats)
@@ -392,8 +400,12 @@ int main() {
     }
     output.close();
 
-
+    #ifdef _WIN32  
+        mode |= (ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT);
+        SetConsoleMode(hStdin, mode);
+    #elif __linux__
         tcsetattr(STDIN_FILENO, TCSANOW, &oldt); // 恢复旧的终端设置  
+    #endif
     // make cursor visible, reset all modes
 	printf("\033[?25h\033[m");
 
