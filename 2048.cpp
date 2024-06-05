@@ -246,7 +246,7 @@ bool check(char direction) {
     return sliped;
 }  
 
-// this function receives 2 pointers (indicated by *) so it can set their values
+// this function receives 2 pointers (indicated by *) so it can set their values, idea comes from https://github.com/mevdschee/2048.c
 void getColors(int value, uint8_t scheme, uint8_t *foreground, uint8_t *background)
 {
     
