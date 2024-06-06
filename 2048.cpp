@@ -17,25 +17,7 @@ struct Data {
   
 Data dat = {0, 4, 0};
 
-vector<vector<int>> grid(4, vector<int>(4));;
-
-bool addRandom() {  
-    std::srand(static_cast<unsigned int>(std::time(nullptr)));    
-    vector<pair<int, int>>  avaliable;
-    for (int i = 0; i < dat.size; ++i)
-    {
-        for (int j = 0; j < dat.size; ++j)
-            if (grid[i][j] == 0)    avaliable.push_back({i, j});
-    }
-    if (avaliable.size() == 0)  return false;
-    int rand = std::rand() % avaliable.size();  
-    return (grid[avaliable[rand].first][avaliable[rand].second] = 2);
-}  
-
-void initialize() {  
-    addRandom();  
-    addRandom();  
-}
+vector<vector<int>> grid(4, vector<int>(4));
 
 void msg(int &i)
 {
@@ -319,10 +301,31 @@ void refresh() {
 #ifdef _WIN32  
     #define byte WindowsByte // 或者其他不会与 std::byte 冲突的名字  
     #include <windows.h> // x86_64-w64-mingw32-g++ ./2048.cpp -static on ubuntu and the terminal should support ANSI(Windows Terminal, ConEmu, Cygwin)
+    #define SLEEP(ms) Sleep(ms)  
 #elif __linux__
     #include <termios.h>
     #include <unistd.h>
+    #define SLEEP(ms) usleep(ms * 1000)
 #endif
+
+bool addRandom() {
+    SLEEP(3e2);
+    std::srand(static_cast<unsigned int>(std::time(nullptr)));    
+    vector<pair<int, int>>  avaliable;
+    for (int i = 0; i < dat.size; ++i)
+    {
+        for (int j = 0; j < dat.size; ++j)
+            if (grid[i][j] == 0)    avaliable.push_back({i, j});
+    }
+    if (avaliable.size() == 0)  return false;
+    int rand = std::rand() % avaliable.size();  
+    return (grid[avaliable[rand].first][avaliable[rand].second] = 2);
+}  
+
+void initialize() {  
+    addRandom();  
+    addRandom();  
+}
 
 int main(int argc, char* argv[]) {  
     // accept the size argument
@@ -370,17 +373,15 @@ int main(int argc, char* argv[]) {
     }
 
     char direction;  
-    while ((direction = getchar()) != 'q' && direction != 'Q') {  
+    while ((direction = getchar()) != 'q' && direction != 'Q') {
             refresh();
             if (check(direction))
             {  
-                refresh(); 
+                refresh();
                 if (addRandom())
-                    refresh();
-                else 
                 {
-                    continue;
-                };
+                    refresh();
+                }
             } 
         // TODO: 检查游戏是否结束（无法再合并）  
     }  
