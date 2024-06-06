@@ -349,8 +349,7 @@ int main() {
     Data tmp;
     std::ifstream input("scores.dat"); // 使用二进制模式  
     if (!input.is_open()) {  
-        std::cerr << "无法打开文件以进行读取" << std::endl;  
-        return 1;  
+        std::ofstream outfile("example.txt");  
     }
     while (input.read(reinterpret_cast<char*>(&tmp), sizeof(tmp)))  
     {
