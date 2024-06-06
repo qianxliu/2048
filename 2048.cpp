@@ -58,7 +58,7 @@ void mergeUp(bool& sliped) {
         // 如果列中没有数字，则跳过  
         if (column.empty()) continue;  
 
-        int idx = 0;    
+        size_t idx = 0;    
         while (idx < column.size() - 1) {    
             if (*column[idx] == *column[idx + 1]) {   
                                 sliped = true; 
@@ -105,7 +105,7 @@ void mergeLeft(bool& sliped) {
         // 如果列中没有数字，则跳过  
         if (rows.empty()) continue;  
         // 合并temp中的数字  
-        int idx = 0;  
+        size_t idx = 0;  
         while (idx < rows.size() - 1) {  
             if (*rows[idx] == *rows[idx + 1]) {  
                 sliped = true; 
@@ -147,7 +147,7 @@ void mergeDown(bool& sliped) {
         if (column.empty()) continue;  
 
         // 合并temp中的数字  
-        int idx = 0;  
+        size_t idx = 0;  
         while (idx < column.size() - 1) {  
             if (*column[idx] == *column[idx + 1]) {  
                 *column[idx] *= 2; // 合并相同的数字  
@@ -188,7 +188,7 @@ void mergeRight(bool& sliped) {
 
         if (rows.empty()) continue;  
         // 合并temp中的数字  
-        int idx = 0;  
+        size_t idx = 0;  
         while (idx < rows.size() - 1) {  
             if (*rows[idx] == *rows[idx + 1]) { 
                 *rows[idx] *= 2; // 合并相同的数字
@@ -392,7 +392,7 @@ int main(int argc, char* argv[]) {
         else return false;
     });
     int d = 0;
-    for (int i = 0; i+1 < dats.size();)
+    for (size_t i = 0; i+1 < dats.size();)
     {
         if (dat.size == dats[i].size && (dats[i].score == dats[i+1].score || d++ > 9))
         {
