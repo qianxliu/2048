@@ -222,7 +222,7 @@ bool check(char direction) {
     {
 		case 119: // 'w' key
 		case 107: // 'k' key
-		case 65:  // up arrow
+		case 65:  // up arrow, only works on Linux
             mergeUp(sliped);
             break;
 		case 97:  // 'a' key
@@ -306,7 +306,7 @@ void refresh() {
 			}
 			else
 			{
-				printf("   ·   ");
+				printf("   -   ");
 			}
 			printf("\033[m"); // reset all modes
 		}
