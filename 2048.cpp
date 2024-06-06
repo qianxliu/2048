@@ -17,7 +17,7 @@ struct Data {
   
 Data dat = {0, 4, 0};
 
-vector<vector<int>> grid(4, vector<int>(4));
+vector<vector<int>> grid(4, vector<int>(4));;
 
 bool addRandom() {  
     std::srand(static_cast<unsigned int>(std::time(nullptr)));    
@@ -29,8 +29,7 @@ bool addRandom() {
     }
     if (avaliable.size() == 0)  return false;
     int rand = std::rand() % avaliable.size();  
-    grid[avaliable[rand].first][avaliable[rand].second] = 2;
-    return true;
+    return (grid[avaliable[rand].first][avaliable[rand].second] = 2);
 }  
 
 void initialize() {  
@@ -325,9 +324,7 @@ void refresh() {
     #include <unistd.h>
 #endif
 
-int main() {  
-    initialize();
-
+int main(int argc, char* argv[]) {  
 	// make cursor invisible, erase entire screen
     printf("\033[?25l\033[2J");
 
@@ -358,7 +355,12 @@ int main() {
     }
     input.close();
 
+    if (argc == 2 && atoi(argv[1]) > 1) dat.size = atoi(argv[1]);
+    grid.resize(dat.size, vector<int>(dat.size));
+
+    initialize();
     refresh();
+    cout << "\n";
     for (Data dat : dats)
     {
         time_t now = dat.time;
@@ -366,7 +368,7 @@ int main() {
     }
 
     char direction;  
-    while ((direction = getchar()) != '\n' && direction != 'q') {  
+    while ((direction = getchar()) != 'q' && direction != 'Q') {  
             refresh();
             if (check(direction))
             {  
@@ -411,5 +413,6 @@ int main() {
     // make cursor visible, reset all modes
 	printf("\033[?25h\033[m");
 
+    system("clear");
     return 0;  
 }
