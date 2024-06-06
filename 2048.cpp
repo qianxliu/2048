@@ -347,7 +347,7 @@ int main(int argc, char* argv[]) {
     string filename = "scores.dat";
     std::ifstream input(filename); // 使用二进制模式  
     if (!input.is_open()) {  
-        std::ofstream outfile(filename);  
+        std::ofstream outfile(filename);
     }
     while (input.read(reinterpret_cast<char*>(&tmp), sizeof(tmp)))  
     {
@@ -356,15 +356,16 @@ int main(int argc, char* argv[]) {
     input.close();
 
     if (argc == 2 && atoi(argv[1]) > 1) dat.size = atoi(argv[1]);
+    grid.clear();
     grid.resize(dat.size, vector<int>(dat.size));
 
     initialize();
     refresh();
     cout << "\n";
-    for (Data dat : dats)
+    for (Data d : dats)
     {
-        time_t now = dat.time;
-        cout << dat.score << "\t" << dat.size << "\t" << asctime(localtime(&now));
+        time_t now = d.time;
+        if (d.size == dat.size)   cout << d.score << "\t" << d.size << "\t" << asctime(localtime(&now));
     }
 
     char direction;  
@@ -386,11 +387,18 @@ int main(int argc, char* argv[]) {
     dat.time = std::time(nullptr);
     dats.push_back(dat);
     sort(dats.begin(), dats.end(), [](Data &a, Data &b){
-        return a.score > b.score;   // can not if (a.score>b.score) return true;
-    });  
-    for (int i = dats.size()-1; i > 0; --i)
+        if (a.size > b.size)    return true;
+        else if (a.size == b.size && a.score > b.score) return true;
+        else return false;
+    });
+    int d = 0;
+    for (int i = 0; i+1 < dats.size();)
     {
-        if (i > 9 || dats[i].score == dats[i-1].score)   dats.erase(dats.begin() + i);
+        if (dat.size == dats[i].size && (dats[i].score == dats[i+1].score || d++ > 9))
+        {
+            dats.erase(dats.begin() + i);
+        }
+        else ++i;
     }
 
     std::ofstream output(filename, std::ios::out | std::ios::trunc); // 使用二进制模式  
@@ -413,6 +421,5 @@ int main(int argc, char* argv[]) {
     // make cursor visible, reset all modes
 	printf("\033[?25h\033[m");
 
-    system("clear");
     return 0;  
 }
