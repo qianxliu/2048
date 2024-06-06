@@ -347,9 +347,10 @@ int main() {
 
     std::vector<Data> dats;
     Data tmp;
-    std::ifstream input("scores.dat"); // 使用二进制模式  
+    string filename = "scores.dat";
+    std::ifstream input(filename); // 使用二进制模式  
     if (!input.is_open()) {  
-        std::ofstream outfile("example.txt");  
+        std::ofstream outfile(filename);  
     }
     while (input.read(reinterpret_cast<char*>(&tmp), sizeof(tmp)))  
     {
@@ -390,7 +391,7 @@ int main() {
         if (i > 9 || dats[i].score == dats[i-1].score)   dats.erase(dats.begin() + i);
     }
 
-    std::ofstream output("scores.dat", std::ios::out | std::ios::trunc); // 使用二进制模式  
+    std::ofstream output(filename, std::ios::out | std::ios::trunc); // 使用二进制模式  
     if (!output.is_open()) {  
         std::cerr << "can not open file!" << std::endl;  
         return 1;  
