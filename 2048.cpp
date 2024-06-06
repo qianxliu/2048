@@ -325,6 +325,11 @@ void refresh() {
 #endif
 
 int main(int argc, char* argv[]) {  
+    // accept the size argument
+    if (argc == 2 && atoi(argv[1]) > 1) dat.size = atoi(argv[1]);
+    grid.clear();
+    grid.resize(dat.size, vector<int>(dat.size));
+
 	// make cursor invisible, erase entire screen
     printf("\033[?25l\033[2J");
 
@@ -354,10 +359,6 @@ int main(int argc, char* argv[]) {
         dats.push_back(tmp);
     }
     input.close();
-
-    if (argc == 2 && atoi(argv[1]) > 1) dat.size = atoi(argv[1]);
-    grid.clear();
-    grid.resize(dat.size, vector<int>(dat.size));
 
     initialize();
     refresh();
