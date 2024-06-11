@@ -24,6 +24,16 @@ void msg(int &i)
     if (i == 2048)  std::cout << "You reached 2048!" << '\n';  
 }
 
+#ifdef _WIN32  
+    #define byte WindowsByte // 或者其他不会与 std::byte 冲突的名字  
+    #include <windows.h> // x86_64-w64-mingw32-g++ ./2048.cpp -static on ubuntu and the terminal should support ANSI(Windows Terminal, ConEmu, Cygwin)
+    #define SLEEP(ms) Sleep(ms)  
+#elif __linux__
+    #include <termios.h>
+    #include <unistd.h>
+    #define SLEEP(ms) usleep(ms * 1000)
+#endif
+
 vector<int> v;
 void mergeUp(bool& sliped) {  
     std::vector<int*> column;   
@@ -37,7 +47,7 @@ void mergeUp(bool& sliped) {
                 column.push_back(&grid[row][col]);
         }  
     
-        // 如果列中没有数字，则跳过  
+        // 如果列中没有数字，则跳过  in loops(for, while)
         if (column.empty()) continue;  
 
         size_t idx = 0;    
@@ -222,10 +232,12 @@ bool check(char direction) {
             mergeRight(sliped);
             break;
         default:
-            return false;
+            break;
     }
     return sliped;
 }  
+
+#include <cmath>
 
 // this function receives 2 pointers (indicated by *) so it can set their values, idea comes from https://github.com/mevdschee/2048.c
 void getColors(int value, uint8_t scheme, uint8_t *foreground, uint8_t *background)
@@ -236,11 +248,7 @@ void getColors(int value, uint8_t scheme, uint8_t *foreground, uint8_t *backgrou
 	uint8_t bluered[] = {235, 255, 63, 255, 57, 255, 93, 255, 129, 255, 165, 255, 201, 255, 200, 255, 199, 255, 198, 255, 197, 255, 196, 255, 196, 255, 196, 255, 196, 255, 196, 255};
 	uint8_t *schemes[] = {original, blackwhite, bluered};
 	// modify the 'pointed to' variables (using a * on the left hand of the assignment)
-    int temp = 1, exponent = 0;
-    while (temp < value) {  
-        temp <<= 1; // Left shift by 1  
-        exponent++;  
-    }  
+    uint8_t exponent = log2(value);
 	*foreground = *(schemes[scheme] + (exponent*2+1) % sizeof(original));
 	*background = *(schemes[scheme] + (exponent*2) % sizeof(original));
 	// alternatively we could have returned a struct with two variables
@@ -262,7 +270,7 @@ void printColor(uint8_t &x, uint8_t &y, uint8_t &fg, uint8_t &bg)
 
 void refresh() {
     printf("\033[H"); // move cursor to 0,0
-    std::cout << "Enter move (w/a/s/d or q/enter to quit): \n";  
+    std::cout << "Enter move (w/a/s/d or q to quit): \n";  
     printf("2048.cpp %17d points\n", dat.score);
 
 	uint8_t x, y, fg, bg;    
@@ -275,14 +283,8 @@ void refresh() {
 			printf("\033[38;5;%d;48;5;%dm", fg, bg); // set color
 			if (grid[x][y] != 0)
 			{
-                int number = grid[x][y];
-                int count = 0;
-                do
-                {
-                    number /= 10;
-                    count += 1;
-                } while (number);
-				uint8_t t = 7 - count;
+                int number = grid[x][y];            
+				uint8_t t = 7 - log10(number);
 				printf("%*s%u%*s", t - t / 2, "", grid[x][y], t / 2, "");
 			}
 			else
@@ -296,17 +298,7 @@ void refresh() {
 	}
 	printf("\n");
 	printf("\033[A"); // one line up
-}  
-
-#ifdef _WIN32  
-    #define byte WindowsByte // 或者其他不会与 std::byte 冲突的名字  
-    #include <windows.h> // x86_64-w64-mingw32-g++ ./2048.cpp -static on ubuntu and the terminal should support ANSI(Windows Terminal, ConEmu, Cygwin)
-    #define SLEEP(ms) Sleep(ms)  
-#elif __linux__
-    #include <termios.h>
-    #include <unistd.h>
-    #define SLEEP(ms) usleep(ms * 1000)
-#endif
+}
 
 bool addRandom() {
     SLEEP(3e2);
